@@ -80,11 +80,17 @@ logging:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
+{{#sagaServiceUrl policies}}
 api:
   url:
-  {{#sagaServiceUrl policies}}
     {{name}}: localhost:{{portGenerated}}
-  {{/sagaServiceUrl}}
+{{/sagaServiceUrl}}
+
+  {{#checkCommandRelation relationCommandInfo}}
+api:
+  url:
+{{#setApiUrl relationCommandInfo false}}{{/setApiUrl}}
+{{/checkCommandRelation}}
 
 server:
   port: {{portGenerated}}
@@ -139,12 +145,17 @@ spring:
           contentType: application/json
 
 
-
+{{#sagaServiceUrl policies}}
 api:
   url:
-    {{#sagaServiceUrl policies}}
     {{name}}: {{url name}}:8080
-    {{/sagaServiceUrl}}
+{{/sagaServiceUrl}}
+
+{{#checkCommandRelation relationCommandInfo}}
+api:
+  url:
+{{#setApiUrl relationCommandInfo false}}{{/setApiUrl}}
+{{/checkCommandRelation}}
 
 
 <function>
@@ -221,5 +232,33 @@ window.$HandleBars.registerHelper('setApiUrl', function (relationCommandInfo, is
 
 window.$HandleBars.registerHelper('toLowerCase', function(str) {
   return str.toLowerCase();
+});
+
+window.$HandleBars.registerHelper('checkCommandRelation', function (relationCommandInfo, options) {
+    if(!relationCommandInfo){
+      return options.inverse(this)
+    }
+    else{
+      if(relationCommandInfo.length < 0){
+        return options.inverse(this)
+      }
+      return options.fn(this)
+    }
+});
+
+window.$HandleBars.registerHelper('setApiUrl', function (relationCommandInfo, isPortGen) {
+  var text = "";
+  relationCommandInfo.forEach(function(item) {
+    if(!text.includes(item.commandValue.boundedContext.name)) {
+      // text += "    " + item.commandValue.boundedContext.name + ": " + item.commandValue.boundedContext.name;
+      text += "    " + item.commandValue.boundedContext.name + ": " + "localhost";
+      if(isPortGen) {
+        text += ":" + item.commandValue.boundedContext.portGenerated + "\n";
+      } else {
+        text += ":8080\n";
+      }
+    }
+  })
+  return text;
 });
 </function>
